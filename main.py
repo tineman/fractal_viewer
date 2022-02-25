@@ -13,7 +13,10 @@ ITERATIONS = 20
 
 
 def escape(a: float, b: float, iterations: int) -> tuple:
-
+    '''
+    Return a 3-tuple giving the RGB value the pixel at coordinate (a, bi) should be coloured
+    using iterations iterations
+    '''
     #i = 0 is the first iteration of the function
     ainit = a
     binit = b
