@@ -8,26 +8,30 @@ App that allows the user to zoom in and pan around the mandelbrot set fractal.
 
 TODO
 
-    - Port to C and SDL
-    - Make panning and zooming mouse operations
-    - Optimize panning
+    pan, zoom
+    pan optimization (only new areas)
+    get better algorithm
+
     - Test the detail given by larger numbers of iterations (what if you use doubles? is there a way to get arbitray precision?)
     - Test with small numbers, see if you can increase amt zoomable (what is the max zoomability given current precision?)
-    - Optimize (diff. plotting algoriths?) [definitly]
     - Test for bugs
+        - Potential bug - when rendering(3, 3), there are non-black areas that are beyond the square bound by (-2, -2) and (2, 2) - OH because I only check if a, b >2, not if a, b < -2
     - Colouring
-    [MVP]
-    (gif generator? the user moves to points and they get a gif?) (yes, put on youtube github and website if you cant put it on a website)
+    - GIF generator
 
+    - Equation editor so you can reuse the code to see different sets (e.g. burning ship fractal)
+
+    - Optimize (diff. plotting algoriths?) [definitly]
     - Read more about associated Julia sets?
+    
 
 */
 
 #include <stdio.h>
-#include <math.h> //needed for the pow operator because apparently C doens't have exponents!??!?!?!!?
+#include <math.h> 
 #include <SDL2/SDL.h>
 
-#define WIDTH 640
+#define WIDTH 480
 #define HEIGHT 480
 
 #define ITERATIONS 30
@@ -46,6 +50,8 @@ typedef struct Backend
 */
 Backend init_backend();
 
+
+
 /*
     FREES p_window and p_renderer
 
@@ -53,6 +59,8 @@ Backend init_backend();
     \param p_renderer The pointer to where the renderer will be stored
 */
 void del_backend(SDL_Window* p_window, SDL_Renderer* p_renderer);
+
+
 
 /*
     MODIFIES float at pointer truple such that ... using a brute force algorithm
@@ -63,8 +71,11 @@ void del_backend(SDL_Window* p_window, SDL_Renderer* p_renderer);
 */
 void escape(float a, float b, Uint8* triple);
 
+
+
 /*
-    RENDERS the mandelbrot set such that
+    RENDERS the mandelbrot set such that ...
+    Warning: max_x:max_y :: WIDTH:HEIGHT, otherwise the fractal will be stretched/compressed
 
     \param p_renderer The renderer on which the function renders
     \param max_x The largest cartesian x-value on the screen
@@ -73,6 +84,25 @@ void escape(float a, float b, Uint8* triple);
     \param mid_y The cartesian y-value at the center of the screen
 */
 void render(SDL_Renderer* p_renderer, float max_x, float max_y, float mid_x, float mid_y);
+
+
+
+/*
+    PANS the current camera when the left mouse button is pressed. The function
+    pans the current X and Y coordinates of the screen at a one to one ratio to 
+    the distance the mouse moves. The function exits when the mouse button is
+    released.
+
+    \param x_init The mouse's x_coordinate (pixel point) at the time the mouse is pressed
+    \param y_init The mouse's y_coordinate (pixel point) at the time the mouse is pressed
+    \param max_x The magnitude of the postive x-axis
+    \param max_y The amgnitude of the positive y-axis
+    \param p_xmid The pointer to the current x-midpoint (unit: Cartesian points)
+    \param p_ymid The pointer to the current y_midpoint (unit: Cartesian points)
+*/
+void pan(SDL_Renderer* p_renderer, int x_init, int y_init, float max_x, float max_y, float* p_xmid, float* p_ymid);
+
+
 
 Backend init_backend()
 {
@@ -87,12 +117,16 @@ Backend init_backend()
     return backend;
 }
 
+
+
 void del_backend(SDL_Window* p_window, SDL_Renderer* p_renderer)
 {
     SDL_RenderClear(p_renderer);
     SDL_DestroyWindow(p_window);
     SDL_Quit();
 }
+
+
 
 void escape(float a, float b, Uint8* triple)
 {
@@ -117,6 +151,8 @@ void escape(float a, float b, Uint8* triple)
 
 }
 
+
+
 void render(SDL_Renderer* p_renderer, float max_x, float max_y, float mid_x, float mid_y)
 {
     //Each pixel is scale units apart (cartesian units/pixel)
@@ -140,10 +176,54 @@ void render(SDL_Renderer* p_renderer, float max_x, float max_y, float mid_x, flo
             SDL_RenderDrawPoint(p_renderer, pixel_x, pixel_y);
         }
     }
+
+    SDL_RenderPresent(p_renderer);
+
 }
+
+
+
+void pan(SDL_Renderer* p_renderer, int x_init, int y_init, float max_x, float max_y, float* p_xmid, float* p_ymid)
+{
+    SDL_Event e;
+
+    int quit = 0;
+
+    const int refreshrate = 100; //once every 82 miliseconds ~= 12 FPS
+
+    Uint32 time_init = SDL_GetTicks();
+
+    while(!quit)
+    {
+        while(SDL_PollEvent(&e) != 0)
+        {
+
+            if(e.type == SDL_MOUSEBUTTONUP) quit = 1;
+
+            else if(e.type == SDL_MOUSEMOTION && (e.motion.timestamp - time_init > refreshrate))
+            {
+                time_init = e.motion.timestamp;
+
+                *(p_xmid) = *(p_xmid) - ((e.motion.x - x_init) * ((2 * max_x)/WIDTH));
+                *(p_ymid) = *(p_ymid) + ((y_init - e.motion.y) * ((2 * max_y)/HEIGHT));
+    
+                x_init = e.motion.x;
+                y_init = e.motion.y;
+
+                render(p_renderer, max_x, max_y, *(p_xmid), *(p_ymid));
+                
+            }
+            
+        }
+
+    }
+}
+
+
 
 int main()
 {
+    //Initializing window and renderer
     SDL_Window* p_window = NULL;
     SDL_Renderer* p_renderer = NULL;
 
@@ -152,30 +232,57 @@ int main()
     p_window = backend.p_window;
     p_renderer = backend.p_renderer;
 
+    //----------------------------------//
 
-
-    if(p_window == NULL || p_renderer == NULL) printf("error!");
-    
     SDL_Event e;
 
     int quit = 0;
 
-    //Plotting
-    render(p_renderer, 3, 3, 0, 0);
-    SDL_RenderPresent(p_renderer);
+    //----------------------------------//
 
+    float xmid = 0;
+    float ymid = 0;
+    float max_x = 3;
+    float max_y = 3;
 
+    //------ Initial Plotting -----------//
+
+    render(p_renderer, max_x, max_y, xmid, ymid);
+
+    //------ Main Loop -------//
 
     while(!quit)
     {
         while(SDL_PollEvent(&e) != 0)
         {
             if(e.type == SDL_QUIT) quit = 1;
-        }
+
+            else if(e.type == SDL_MOUSEBUTTONDOWN) 
+            {
+                pan(p_renderer, e.button.x, e.button.y, max_x, max_y, &(xmid), &(ymid));
+            }
+
+            else if(e.type == SDL_KEYDOWN)
+            {
+                if(e.key.keysym.sym == SDLK_d)
+                {
+                    max_x *= 0.75;
+                    max_y *= 0.75;
+                    render(p_renderer, max_x, max_y, xmid, ymid);
+                }
+
+                else if(e.key.keysym.sym == SDLK_f)
+                {
+                    max_x *= 1.25;
+                    max_y *= 1.25;
+                    render(p_renderer, max_x, max_y, xmid, ymid);
+                }
+            }
+        } 
 
     }
 
-    printf("ending");
+    printf("ending\n");
     del_backend(p_window, p_renderer);
 
 }
