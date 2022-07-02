@@ -8,24 +8,13 @@ App that allows the user to zoom in and pan around the mandelbrot set fractal.
 
 TODO
 
-    pan, zoom
-    pan optimization (only new areas)
-    get better algorithm
-
-    NO DYNAMIC ITER CHANGE - manual
-
-    - Test the detail given by larger numbers of iterations (what if you use doubles? is there a way to get arbitray precision?)
-    - Test with small numbers, see if you can increase amt zoomable (what is the max zoomability given current precision?)
-    - Test for bugs
-        - Potential bug - when rendering(3, 3), there are non-black areas that are beyond the square bound by (-2, -2) and (2, 2) - OH because I only check if a, b >2, not if a, b < -2
-    - Colouring
+    - period checking
+    - rectangle dividing algorithm
+    - arbitrary precision
     - GIF generator
+    - REPL
 
-    - Equation editor so you can reuse the code to see different sets (e.g. burning ship fractal)
-
-    - Optimize (diff. plotting algoriths?) [definitly]
-    - Read more about associated Julia sets?
-    
+    - Equation editor so you can reuse the code to see different sets (e.g. burning ship fractal) (use function pointers)
 
 */
 
@@ -73,6 +62,7 @@ int escape(Coord query)
         if(query.real > 2 || query.imag > 2)
         {
             return i;
+            if(i == 0) printf("error");
         }
         float temp = query.real;
 
@@ -80,7 +70,7 @@ int escape(Coord query)
         query.imag = 2 * temp * query.imag + init.imag;
     }
 
-    return ITERATIONS;
+    return 0;
 
 }
 
@@ -99,21 +89,20 @@ void render(SDL_Renderer* p_renderer, Coord max, Coord mid)
     for(int pixel_x = 0; pixel_x < WIDTH; pixel_x++)
     {
         point.real = pixel_x * scale.real - max.real + mid.real;
+        
         for(int pixel_y = 0; pixel_y < HEIGHT; pixel_y++)
         {
             point.imag = pixel_y * scale.imag - max.imag + mid.imag;
-            escape(point);
+            Uint8 triple = (Uint8) (255 * ( (double) (escape(point))/ITERATIONS) );
 
-            //
-
-            /*
             SDL_SetRenderDrawColor(p_renderer, triple, 0, 0, 0xFF);
             SDL_RenderDrawPoint(p_renderer, pixel_x, pixel_y);
-            */
+            
         }
+
     }
 
-    //SDL_RenderPresent(p_renderer);
+    SDL_RenderPresent(p_renderer);
 
 }
 
@@ -170,11 +159,15 @@ int main()
 
     //----------------------------------//
 
+    //Variables for controlling the main loop
+
     SDL_Event e;
 
     int quit = 0;
 
     //----------------------------------//
+
+    //Variables defining the current camera's region
 
     Coord mid;
     mid.real = 0;
@@ -186,16 +179,18 @@ int main()
 
     //------ Initial Plotting -----------//
 
-
+    render(p_renderer, max, mid);
 
     //------ Main Loop -------//
 
+    
     while(!quit)
     {
         while(SDL_PollEvent(&e) != 0)
         {
             if(e.type == SDL_QUIT) quit = 1;
 
+            /*
             else if(e.type == SDL_MOUSEBUTTONDOWN) 
             {
                 //pan and render
@@ -215,8 +210,11 @@ int main()
                     max.real *= 1.25;
                     max.imag *= 1.25;
                     //zoom and render
+                
                 }
+                
             }
+            */
         } 
 
     }

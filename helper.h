@@ -54,7 +54,7 @@ void del_backend(SDL_Window* p_window, SDL_Renderer* p_renderer);
 
 
 /*
-    RETURNS the number of iterations it takes for query to escape. Return ITERATIONS if query does not escape
+    RETURNS the number of iterations it takes for query to escape. Return 0 if query does not escape (arbitrary decision to make colouring easier)
 
     \param query - the coordinate in question
 */
