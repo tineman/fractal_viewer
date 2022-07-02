@@ -95,8 +95,6 @@ void render(SDL_Renderer* p_renderer, Coord max, Coord mid)
 
     //The cartesian point being rendered
     Coord point;
-    float real;
-    float imaginary;
 
     for(int pixel_x = 0; pixel_x < WIDTH; pixel_x++)
     {

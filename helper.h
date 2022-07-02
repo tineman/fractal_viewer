@@ -84,8 +84,8 @@ void render(SDL_Renderer* p_renderer, Coord max, Coord mid);
     \param max The magnitude of the area being rendered
     \param p_mid The pointer to the current midpoint
 */
-void pan(SDL_Renderer* p_renderer, Pixel init, Coord max, Coord* p_mid)
+void pan(SDL_Renderer* p_renderer, Pixel init, Coord max, Coord* p_mid);
 
 
 
-#endif
+#endif // #ifndef _HELPER
