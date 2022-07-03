@@ -1,7 +1,8 @@
 #ifndef _HELPER
 #define _HELPER
 
-
+//Structs and constants used everywhere
+//Also includes the functions used for setting up SDL and calculating the colour of each point
 
 #define WIDTH 480
 #define HEIGHT 480

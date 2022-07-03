@@ -2,6 +2,10 @@
 
 gcc -Wall -Wextra -I/Library/Frameworks/SDL.framework/Headers -framework SDL2 main.c
 
+debugging (counting the number of for loops)
+
+gcc -Wall -Wextra -D_MAGPIEDEBUGFLAG -I/Library/Frameworks/SDL.framework/Headers -framework SDL2 main.c
+
 App that allows the user to zoom in and pan around the mandelbrot set fractal.
 
     -
@@ -10,6 +14,7 @@ TODO
 
     - period checking
     - rectangle dividing algorithm
+    - Debugging, linked list of panels to check
     - arbitrary precision
     - GIF generator
     - REPL
@@ -23,6 +28,10 @@ TODO
 #include <SDL2/SDL.h>
 #include "helper.h"
 
+//----------------------------------//
+#ifdef _MAGPIEDEBUGFLAG
+int num_iterations = 0;
+#endif //_MAGPIEDEBUGFLAG
 
 
 Backend init_backend()
@@ -61,14 +70,22 @@ int escape(Coord query)
     {
         if(query.real > 2 || query.imag > 2)
         {
+
+            #ifdef _MAGPIEDEBUGFLAG
+            num_iterations += i;
+            #endif //_MAGPIEDEBUGFLAG
+
             return i;
-            if(i == 0) printf("error");
         }
         float temp = query.real;
 
         query.real = pow(query.real, 2) - pow(query.imag, 2) + init.real;
         query.imag = 2 * temp * query.imag + init.imag;
     }
+
+    #ifdef _MAGPIEDEBUGFLAG
+    num_iterations += ITERATIONS;
+    #endif //_MAGPIEDEBUGFLAG
 
     return 0;
 
@@ -103,6 +120,11 @@ void render(SDL_Renderer* p_renderer, Coord max, Coord mid)
     }
 
     SDL_RenderPresent(p_renderer);
+
+    #ifdef _MAGPIEDEBUGFLAG
+    printf("Rendering the image at %f + %fi at a magnitude of %fX i took %d for loops! If you still had to pay for computer time, you'd be one sad panda!\n", mid.real, mid.imag, max.real, num_iterations);
+    num_iterations = 0;
+    #endif //_MAGPIEDEBUGFLAG
 
 }
 
