@@ -8,18 +8,18 @@ gcc -Wall -Wextra -D_MAGPIEDEBUGFLAG -I/Library/Frameworks/SDL.framework/Headers
 
 App that allows the user to zoom in and pan around the mandelbrot set fractal.
 
-    -
+
 
 TODO
 
+    - Fix pan and scale
+    - linked list of panels to check (hard code a testing suite)
     - period checking
     - rectangle dividing algorithm
-    - Debugging, linked list of panels to check
-    - arbitrary precision
-    - GIF generator
-    - REPL
-
     - Equation editor so you can reuse the code to see different sets (e.g. burning ship fractal) (use function pointers)
+    - GIF generator
+    - arbitrary precision
+    - REPL
 
 */
 
