@@ -3,8 +3,10 @@
 gcc -Wall -Wextra -I/Library/Frameworks/SDL.framework/Headers -framework SDL2 main.c
 
 debugging (counting the number of for loops)
+_DEBUG_ITERATIONS
+_DEBUG_SUBRENDER
 
-gcc -Wall -Wextra -D_MAGPIEDEBUGFLAG -I/Library/Frameworks/SDL.framework/Headers -framework SDL2 main.c
+gcc -Wall -Wextra -D_DEBUG_SUBRENDER -I/Library/Frameworks/SDL.framework/Headers -framework SDL2 main.c
 
 App that allows the user to zoom in and pan around the mandelbrot set fractal.
 
@@ -28,9 +30,9 @@ TODO
 #include "helper.h"
 
 //----------------------------------//
-#ifdef _MAGPIEDEBUGFLAG
+#ifdef _DEBUG_ITERATIONS
 int num_iterations = 0;
-#endif //_MAGPIEDEBUGFLAG
+#endif //_DEBUG_ITERATIONS
 
 
 Backend init_backend()
@@ -70,9 +72,9 @@ int escape(Coord query)
         if(query.real > 2 || query.imag > 2)
         {
 
-            #ifdef _MAGPIEDEBUGFLAG
+            #ifdef _DEBUG_ITERATIONS
             num_iterations += i;
-            #endif //_MAGPIEDEBUGFLAG
+            #endif //_DEBUG_ITERATIONS
 
             return i;
         }
@@ -82,18 +84,37 @@ int escape(Coord query)
         query.imag = 2 * temp * query.imag + init.imag;
     }
 
-    #ifdef _MAGPIEDEBUGFLAG
+    #ifdef _DEBUG_ITERATIONS
     num_iterations += ITERATIONS;
-    #endif //_MAGPIEDEBUGFLAG
+    #endif //_DEBUG_ITERATIONS
 
     return 0;
 
 }
 
-
+//debug subrender using a new function which maps the i, jth entry of the input array to a copy of hte correct array
 
 void subrender(Uint8 color[HEIGHT][WIDTH], Pixel top_left, Pixel bottom_right, Pixel line, Coord scale, int eval_line, Coord max, Coord mid) //before calling this you need to escape the perimeter first //call with height - 1...
 {
+
+
+
+    //To be used on small arrays
+    #ifdef _DEBUG_SUBRENDER
+    printf("Subrender called on (%d, %d) and (%d, %d)\n", top_left.x, top_left.y, bottom_right.x, bottom_right.y);
+    printf("The current state fo the array is:\n");
+    for(int i = 0; i < HEIGHT; i++)
+    {
+        for(int j = 0; j < WIDTH; j++)
+        {
+            printf("%d, ", color[i][j]);
+        }
+        printf("\n");
+    }
+    #endif //#ifdef _DEBUG_SUBRENDER
+
+
+
     if((top_left.x == bottom_right.x) && (top_left.y = bottom_right.y)) return;
 
     if(eval_line)
@@ -137,6 +158,9 @@ void subrender(Uint8 color[HEIGHT][WIDTH], Pixel top_left, Pixel bottom_right, P
 
 
     //DEBUG
+    #ifdef _DEBUG_SUBRENDER
+    if(succeed) printf("The subarray defined by (%d, %d) and (%d, %d) was filled in completely with the color corresponding to %d\n", top_left.x, top_left.y, bottom_right.x, bottom_right.y, color_check);
+    #endif //#ifdef _DEBUG_SUBRENDER
 
 
 
@@ -215,10 +239,10 @@ void render(SDL_Renderer* p_renderer, Coord max, Coord mid)
 
     SDL_RenderPresent(p_renderer);
 
-    #ifdef _MAGPIEDEBUGFLAG
+    #ifdef _DEBUG_ITERATIONS
     printf("Rendering the image at %f + %fi at a magnitude of %fX i took %d for loops! If you still had to pay for computer time, you'd be one sad panda!\n", mid.real, mid.imag, max.real, num_iterations);
     num_iterations = 0;
-    #endif //_MAGPIEDEBUGFLAG
+    #endif //_DEBUG_ITERATIONS
 
 }
 
