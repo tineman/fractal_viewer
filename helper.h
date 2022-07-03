@@ -28,8 +28,8 @@ typedef struct Pixel
 //Struct for cartesian coordinates
 typedef struct Coord
 {
-    double real;
-    double imag;
+    long double real;
+    long double imag;
 } Coord;
 
 
@@ -72,6 +72,23 @@ int escape(Coord query);
     \param mid The coordinate at the centre of the screen
 */
 void render(SDL_Renderer* p_renderer, Coord max, Coord mid);
+
+
+
+/*
+    CHANGES array colour such that the subarray bounded by Pixel top_left, bottom_right countains the colours to be drawn to the screen
+
+    Note - this function renders by calling escape on progressvely smaller rectangles. This is based on the fact that if the perimeter of an enclosed area
+    on the mandelbrot set is coloured in one colour, everything in that area can be coloured in that colour. (Mariani-Silver algorithm)
+
+    \param color The array assigning a colour to the corresponding pixel on the screen
+    \param top_left The top left pixel bounding the area to be subrendered (i.e. the pixel with the smallest x, y fields)
+    \param bottom_right The bottom right pixel bounding the area to be subrendered (i.e. the pixel with the largest x, y fields)
+    \param line A point defining the line which must be evaluated. The point is one unit away from either top_left or bottom_right
+    \param scale A coord representing the number of cartesian points a pixel represents
+    \param eval_line A boolean. True if the new line hsa not been calculated. False if it has
+*/
+void subrender(Uint8 color[HEIGHT][WIDTH], Pixel top_left, Pixel bottom_right, Pixel line, Coord scale, int eval_line, Coord max, Coord mid);
 
 
 

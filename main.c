@@ -12,13 +12,12 @@ App that allows the user to zoom in and pan around the mandelbrot set fractal.
 
 TODO
 
-    - Fix pan and scale
+    - rectangle dividing algorithm
+    - Fix pan and scale, optimise using array copying in one dimension
     - linked list of panels to check (hard code a testing suite)
     - period checking
-    - rectangle dividing algorithm
     - Equation editor so you can reuse the code to see different sets (e.g. burning ship fractal) (use function pointers)
     - GIF generator
-    - arbitrary precision
     - REPL
 
 */
@@ -88,6 +87,101 @@ int escape(Coord query)
     #endif //_MAGPIEDEBUGFLAG
 
     return 0;
+
+}
+
+
+
+void subrender(Uint8 color[HEIGHT][WIDTH], Pixel top_left, Pixel bottom_right, Pixel line, Coord scale, int eval_line, Coord max, Coord mid) //before calling this you need to escape the perimeter first //call with height - 1...
+{
+    if((top_left.x == bottom_right.x) && (top_left.y = bottom_right.y)) return;
+
+    if(eval_line)
+    {
+        Coord query;
+
+        if(line.y == (bottom_right.y - 1)) //vertical parititon
+        {
+            query.real = bottom_right.x * scale.real - max.real + mid.real;
+            for(int i = top_left.y + 1; i < bottom_right.y; i++)
+            {
+                query.imag = i * scale.imag - max.imag + mid.imag;
+                color[bottom_right.x][i] = (Uint8) escape(query);
+            }
+        }
+        else //horizontal partition
+        {
+            query.imag = bottom_right.y * scale.imag - max.imag + mid.imag;
+            for(int i = top_left.x + 1; i < bottom_right.x; i++)
+            {
+                query.real = i * scale.real - max.real + mid.real;
+                color[i][bottom_right.y] = (Uint8) escape(query);
+            }
+        }
+        //call escape and write to color
+        //check with bottom corner point it uses to define a line
+    }
+
+    Uint8 color_check = color[top_left.x][top_left.y];
+    int succeed = 0;
+
+    //checks the top row
+    for(int i = top_left.x + 1; (i <= bottom_right.x && succeed); i++) if(color_check != color[i][top_left.y]) succeed = 1;
+    //checks the right column
+    for(int i = top_left.y + 1; (i <= bottom_right.y && succeed); i++) if(color_check != color[bottom_right.x][i]) succeed = 1;
+    //Checks the bottom row
+    for(int i = top_left.x; (i < bottom_right.x && succeed); i++) if(color_check != color[i][bottom_right.y]) succeed = 1;
+    //checks the left column
+    for(int i = top_left.y + 1; (i < bottom_right.y && succeed); i++) if(color_check != color[top_left.x][i]) succeed = 1;
+
+
+
+    //DEBUG
+
+
+
+    if(succeed)
+    {
+        for(int i = top_left.x + 1; i < bottom_right.x; i++)
+        {
+            for(int j = top_left.y + 1; j < bottom_right.y; j++)
+            {
+                color[i][j] = color_check;
+            }
+        }
+        return;
+    }
+
+
+
+    if((bottom_right.x - top_left.x) > (bottom_right.y - top_left.y))
+    {
+        //divide horizontally
+        int partition_line_x = floor((bottom_right.x - top_left.x + 1) / 2);
+        Pixel new_bottom = bottom_right;
+        new_bottom.x = partition_line_x;
+        Pixel new_top = top_left;
+        new_top.x = partition_line_x;
+        Pixel partition = new_bottom;
+        partition.y = new_bottom.y - 1;
+
+        subrender(color, top_left, new_bottom, partition, scale, 0, max, mid);
+        return subrender(color, new_top, bottom_right, partition, scale, 1, max, mid);
+    }
+    else
+    {
+        //divide vertically
+        int partition_line_y = floor((bottom_right.y - top_left.y + 1) / 2);
+        Pixel new_bottom = bottom_right;
+        new_bottom.y = partition_line_y;
+        Pixel new_top = top_left;
+        new_top.y = partition_line_y;
+        Pixel partition = new_bottom;
+        partition.y = new_bottom.x - 1;
+
+        subrender(color, top_left, new_bottom, partition, scale, 0, max, mid);
+        return subrender(color, new_top, bottom_right, partition, scale, 1, max, mid);
+    }
 
 }
 
