@@ -9,7 +9,7 @@
 
 #define ITERATIONS 30
 
-
+#include <math.h>
 
 //SDL components
 typedef struct Backend
