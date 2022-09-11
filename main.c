@@ -12,8 +12,6 @@ App that allows the user to zoom in and pan around the mandelbrot set fractal.
 
 */
 
-#include <stdio.h>
-#include <math.h> 
 #include <SDL2/SDL.h>
 #include "helper.h"
 
@@ -22,7 +20,19 @@ App that allows the user to zoom in and pan around the mandelbrot set fractal.
 int num_iterations = 0;
 #endif //_DEBUG_ITERATIONS
 
+//SDL components
+typedef struct Backend
+{
+    SDL_Window* p_window;
+    SDL_Renderer* p_renderer;
+} Backend;
 
+/*
+    INITIALISES p_window and p_renderer and sets them up
+
+    \param p_window The pointer to where the window will be stored
+    \param p_renderer The pointer to where the renderer will be stored
+*/
 Backend init_backend()
 {
     SDL_Init(SDL_INIT_VIDEO);
@@ -37,7 +47,12 @@ Backend init_backend()
 }
 
 
+/*
+    FREES p_window and p_renderer
 
+    \param p_window The pointer to where the window will be stored
+    \param p_renderer The pointer to where the renderer will be stored
+*/
 void del_backend(SDL_Window* p_window, SDL_Renderer* p_renderer)
 {
     SDL_RenderClear(p_renderer);
@@ -55,15 +70,18 @@ void print_options()
     "2) Go to coordinates\n"
     "3) Pan with mouse\n"
     "GIF CREATION OPTIONS\n"
-    "4) Check gif and frames\n"
-    "5) Edit framerate and gif duration\n"
-    "6) Add snapshot\n"
-    "7) Delete snapshot\n"
-    "8) Save gif\n");
+    "4) Check snapshot\n"
+    "5) Add snapshot\n"
+    "6) Delete snapshot\n"
+    "7) Save gif\n");
 }
 
 
+/*
+    RETURNS the number of iterations it takes for query to escape. Return 0 if query does not escape (arbitrary decision to make colouring easier)
 
+    \param query - the coordinate in question
+*/
 int escape(Coord query)
 {
 
@@ -97,6 +115,14 @@ int escape(Coord query)
 
 }
 
+/*
+    RENDERS the mandelbrot set
+    Warning: max.real:max.imag :: WIDTH:HEIGHT, otherwise the fractal will be stretched/compressed
+
+    \param p_renderer The renderer on which the function renders
+    \param max The largest coordinate on the screen
+    \param mid The coordinate at the centre of the screen
+*/
 void render(SDL_Renderer* p_renderer, Coord max, Coord mid)
 {
     //Each pixel is scale units apart (cartesian units/pixel)
@@ -133,14 +159,23 @@ void render(SDL_Renderer* p_renderer, Coord max, Coord mid)
 }
 
 
+/*
+    PANS the current camera when the left mouse button is pressed. The function
+    pans the current X and Y coordinates of the screen at a one to one ratio to 
+    the distance the mouse moves. The function exits when the mouse button is
+    released.
 
+    \param init The mouse's pixel coordinates at the time the mouse is pressed
+    \param max The magnitude of the area being rendered
+    \param p_mid The pointer to the current midpoint
+*/
 void pan(SDL_Renderer* p_renderer, Pixel init, Coord max, Coord* p_mid)
 {
     SDL_Event e;
 
     int quit = 0;
 
-    const int refreshrate = 100; //once every 82 miliseconds ~= 12 FPS
+    const int refreshrate = 80; //once every 82 miliseconds ~= 12 FPS
 
     Uint32 time_init = SDL_GetTicks();
 
@@ -268,7 +303,51 @@ int main()
 
             case 3: //pan
             
+                printf("Entering panning mode\n");
+                quit = 0;
+                while(!quit)
+                {
+                    while(SDL_PollEvent(&e) != 0)
+                    {
+                        if(e.type == SDL_QUIT)
+                        {
+                            printf("ending\n");
+                            del_backend(p_window, p_renderer);
+                            return 0;
+                        }
+                        else if(e.type == SDL_MOUSEBUTTONDOWN) 
+                        {
+                            Pixel init;
+                            init.x = e.button.x;
+                            init.y = e.button.y;
+                            pan(p_renderer, init, max, &(mid));
+                        }
 
+                        else if(e.type == SDL_KEYDOWN)
+                        {
+                            if(e.key.keysym.sym == SDLK_d)
+                            {
+                                max.real *= 0.75;
+                                max.imag *= 0.75;
+                                render(p_renderer, max, mid);
+                            }
+
+                            else if(e.key.keysym.sym == SDLK_f)
+                            {
+                                max.real *= 1.25;
+                                max.imag *= 1.25;
+                                render(p_renderer, max, mid);
+                            }
+
+                            else if(e.key.keysym.sym == SDLK_q)
+                            {
+                                quit = 1;
+                                printf("Exitting panning mode\n");
+                            }
+                        }
+                    } 
+
+                }
 
                 break;
 
@@ -276,19 +355,15 @@ int main()
             
                 break;
 
-            case 5: //edit gif
+            case 5: //add snapshot
             
                 break;
 
-            case 6: //add snapshot
+            case 6: //delete snapshot
             
                 break;
 
-            case 7: //delete snapshot
-            
-                break;
-
-            case 8: //save gif
+            case 7: //save gif
             
                 break;
         }
