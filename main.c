@@ -71,7 +71,7 @@ void print_options()
     "3) Pan with mouse\n"
     "GIF CREATION OPTIONS\n"
     "4) Check snapshot\n"
-    "5) Add snapshot\n"
+    "5) Add current frame as snapshot\n"
     "6) Delete snapshot\n"
     "7) Save gif\n");
 }
@@ -220,6 +220,14 @@ int main()
 
     //----------------------------------//
 
+    //Variables for saving a gif, index starting at 1 because input uses atoi
+
+    Panel_Node* root = NULL;
+    int num_snapshots = 0;
+    int panel_index = 1;
+
+    //----------------------------------//
+
     //Variables defining the current camera's region
 
     Coord mid;
@@ -229,6 +237,8 @@ int main()
     Coord max;
     max.real = 3;
     max.imag = 3;
+
+    //----------------------------------//
 
     //Initializing window and renderer
     SDL_Window* p_window = NULL;
@@ -242,8 +252,6 @@ int main()
     render(p_renderer, max, mid);
 
     //------ Main Loop -------//
-
-    //Driver
    
     printf(" ______ _____            _____ _______       _       _____      __  __ ____\n"
            "|  ____|  __ \\     /\\   / ____|__   __|/\\   | |     / ____|    |  \\/  |  _ \\\n"
@@ -256,7 +264,6 @@ int main()
 
     char input[128];
 
-
     while(1)
     {
         SDL_PollEvent(&e);
@@ -267,7 +274,7 @@ int main()
         switch(atoi(input))
         {
             case -1: //quit
-                printf("ending\n");
+                printf("Ending\n");
                 del_backend(p_window, p_renderer);
                 return 0;
 
@@ -352,19 +359,66 @@ int main()
                 break;
 
             case 4: //check gif information
-            
+                printInfo(root);
                 break;
 
-            case 5: //add snapshot
-            
+            case 5: //add snapshot (no error checking)
+                
+                if(num_snapshots == 0) printf("Adding your snapshot to index 1 since the gif is empty.\n");
+                else
+                {
+                    printf("Please input the index (1-%d) of your new snapshot\n", num_snapshots + 1);
+                    scanf("%127s", input);
+                    getchar();
+                    if(atoi(input) <= 0)
+                    {
+                        printf("Invalid input, returning to main menu\n");
+                        break;
+                    }
+                    panel_index = atoi(input);
+                }
+
+                printf("Please input the duration of your snapshot. This is the number of time, in seconds, it will take to reach the next snapshot.\n");
+                scanf("%127s", input);
+                getchar();
+                if(atoi(input) <= 0)
+                {
+                    printf("Invalid input, returning to main menu\n");
+                    break;
+                }
+                if(num_snapshots == 0) root = newPanel(max, mid, atoi(input));
+
+                else root = addPanel(root, newPanel(max, mid, atoi(input)), panel_index);
+
+                printf("Panel added\n");
+                num_snapshots++;
                 break;
 
             case 6: //delete snapshot
-            
+
+                if(num_snapshots == 0)
+                {
+                    printf("There are currently no frames in your gif\n");
+                    break;
+                }
+
+                printf("Please input the index (1-%d) of the snapshot you want to delete\n", num_snapshots);
+                scanf("%127s", input);
+                getchar();
+                if(atoi(input) < 1 || atoi(input) > num_snapshots)
+                {
+                    printf("Invalid input, returning to main menu\n");
+                    break;
+                }
+
+                root = deletePanel(root, atoi(input));
+
+                printf("Panel deleted\n");
+                index--;
                 break;
 
             case 7: //save gif
-            
+                //add status bar
                 break;
         }
 

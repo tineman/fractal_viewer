@@ -14,7 +14,7 @@ Panel_Node* addPanel(Panel_Node* root, Panel_Node* new, int index)
 {
     if(root == NULL) return new;
 
-    if(index == 0) //head
+    if(index == 1) //head
     {
         new->next = root;
         return new;
@@ -22,7 +22,7 @@ Panel_Node* addPanel(Panel_Node* root, Panel_Node* new, int index)
 
     Panel_Node* old_root = root;
 
-    while(index != 1)
+    while(index != 2)
     {
         index--;
         root = root->next;
@@ -42,7 +42,7 @@ Panel_Node* deletePanel(Panel_Node* root, int index)
 
     Panel_Node* new_panel;
 
-    if(index == 0) //head
+    if(index == 1) //head
     {
         new_panel = root->next;
         free(root);
@@ -51,7 +51,7 @@ Panel_Node* deletePanel(Panel_Node* root, int index)
 
     Panel_Node* old_root = root;
 
-    while(index != 1)
+    while(index != 2)
     {
         index--;
         root = root->next;
@@ -66,7 +66,7 @@ Panel_Node* deletePanel(Panel_Node* root, int index)
 //PRINT the information in the linked list pointed to by root
 void printInfo(Panel_Node* root)
 {
-    int index = 0;
+    int index = 1;
 
     if(root == NULL) printf("There are no panels yet.\n");
 
@@ -80,7 +80,7 @@ void printInfo(Panel_Node* root)
         root = root->next;
     }
 }
-
+/* Testing
 int main()
 {
 
@@ -89,39 +89,39 @@ int main()
 
     Coord max = {.real = 0, .imag = 0};    
     Coord mid = {.real = 0, .imag = 0};    
-    root = addPanel(root, newPanel(max, mid, 10), 0);
+    root = addPanel(root, newPanel(max, mid, 10), 1);
     printInfo(root);
 
     max.real = 1;
     max.imag = 1;
     mid.real = 1;
     mid.imag = 1;
-    root = addPanel(root, newPanel(max, mid, 10), 1);
+    root = addPanel(root, newPanel(max, mid, 10), 2);
     printInfo(root);
 
     max.real = 2;
     max.imag = max.real;
     mid.real = max.imag;
     mid.imag = mid.real;
-    root = addPanel(root, newPanel(max, mid, 10), 2);
+    root = addPanel(root, newPanel(max, mid, 10), 3);
 
     max.real = 3;
     max.imag = max.real;
     mid.real = max.imag;
     mid.imag = mid.real;
-    root = addPanel(root, newPanel(max, mid, 10), 3);
+    root = addPanel(root, newPanel(max, mid, 10), 4);
 
     max.real = 4;
     max.imag = max.real;
     mid.real = max.imag;
     mid.imag = mid.real;
-    root = addPanel(root, newPanel(max, mid, 10), 4);
+    root = addPanel(root, newPanel(max, mid, 10), 5);
 
     max.real = 5;
     max.imag = max.real;
     mid.real = max.imag;
     mid.imag = mid.real;
-    root = addPanel(root, newPanel(max, mid, 10), 5);
+    root = addPanel(root, newPanel(max, mid, 10), 6);
 
     printf("\n\n\n Test 1\n");
     printInfo(root);
@@ -132,7 +132,7 @@ int main()
     max.imag = max.real;
     mid.real = max.imag;
     mid.imag = mid.real;
-    root = addPanel(root, newPanel(max, mid, 10), 0);
+    root = addPanel(root, newPanel(max, mid, 10), 1);
     printf("\n\n\n Test 2\n");
     printInfo(root);
 
@@ -142,7 +142,7 @@ int main()
     max.imag = max.real;
     mid.real = max.imag;
     mid.imag = mid.real;
-    root = addPanel(root, newPanel(max, mid, 10), 1);
+    root = addPanel(root, newPanel(max, mid, 10), 2);
     printf("\n\n\n Test 3\n");
     printInfo(root);
 
@@ -152,29 +152,30 @@ int main()
     max.imag = max.real;
     mid.real = max.imag;
     mid.imag = mid.real;
-    root = addPanel(root, newPanel(max, mid, 10), 7);
+    root = addPanel(root, newPanel(max, mid, 10), 8);
     printf("\n\n\n Test 4\n");
     printInfo(root);
 
     //10 11 0 1 2 3 4 12 5
 
-    root = deletePanel(root, 0);
+    root = deletePanel(root, 1);
     printf("\n\n\n Test 5\n");
     printInfo(root);
 
     //11 0 1 2 3 4 12 5
 
-    root = deletePanel(root, 3);
+    root = deletePanel(root, 4);
     printf("\n\n\n Test 6\n");
     printInfo(root);
 
     //11 0 1 3 4 12 5
 
-    root = deletePanel(root, 6);
+    root = deletePanel(root, 7);
     printf("\n\n\n Test 7\n");
     printInfo(root);
 
     //11 0 1 3 4 12
 
     return 0;
-}
+    
+}*/
