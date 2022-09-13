@@ -2,10 +2,6 @@
 
 gcc -Wall -Wextra -I/Library/Frameworks/SDL.framework/Headers -framework SDL2 main.c
 
-debugging (counting the number of for loops)
-_DEBUG_ITERATIONS
-_DEBUG_SUBRENDER
-
 gcc -Wall -Wextra -D_DEBUG_SUBRENDER -I/Library/Frameworks/SDL.framework/Headers -framework SDL2 main.c
 
 App that allows the user to zoom in and pan around the mandelbrot set fractal.
@@ -14,6 +10,7 @@ App that allows the user to zoom in and pan around the mandelbrot set fractal.
 
 #include <SDL2/SDL.h>
 #include "helper.h"
+#include "gifenc.h"
 
 //----------------------------------//
 
@@ -87,7 +84,7 @@ int escape(Coord query)
     init.real = query.real;
     init.imag = query.imag;
 
-    for(float i = 0; i < ITERATIONS; i++) 
+    for(float i = 1; i <= pow(2, PALETTE_DEPTH); i++) 
     {
         if(query.real > 2 || query.imag > 2)
         {
@@ -128,7 +125,7 @@ void render(SDL_Renderer* p_renderer, Coord max, Coord mid)
         for(int pixel_y = 0; pixel_y < HEIGHT; pixel_y++)
         {
             point.imag = pixel_y * scale.imag - max.imag + mid.imag;
-            Uint8 triple = (Uint8) (255 * ( (double) (escape(point))/ITERATIONS) );
+            Uint8 triple = (Uint8) (255 * ( (double) (escape(point))/pow(2, PALETTE_DEPTH)) );
 
             SDL_SetRenderDrawColor(p_renderer, triple, 0, 0, 0xFF);
             SDL_RenderDrawPoint(p_renderer, pixel_x, pixel_y);
@@ -139,6 +136,71 @@ void render(SDL_Renderer* p_renderer, Coord max, Coord mid)
 
     SDL_RenderPresent(p_renderer);
 
+}
+
+//Adds the frame at mid and max to the gif gif
+void gif_render(ge_GIF* gif, Coord max, Coord mid, int sidelength) //add duration
+{
+    //Each pixel is scale units apart (cartesian units/pixel)
+    Coord scale;
+    scale.real = 2 * max.real / WIDTH;
+    scale.imag = 2 * max.imag / HEIGHT;
+
+    //The cartesian point being rendered
+    Coord point;
+
+    for(int pixel_x = 0; pixel_x < WIDTH; pixel_x++)
+    {
+        point.real = pixel_x * scale.real - max.real + mid.real;
+        
+        for(int pixel_y = 0; pixel_y < HEIGHT; pixel_y++)
+        {
+            point.imag = pixel_y * scale.imag - max.imag + mid.imag;
+
+            gif->frame[(pixel_y * sidelength) + pixel_x] = escape(point);
+
+        }
+
+    }
+
+    ge_add_frame(gif, 10);
+
+}
+
+
+
+
+void save_gif(char* filename, int sidelength, Panel_Node* root)
+{
+    uint8_t palette[(int) pow(2, PALETTE_DEPTH) * 3];
+
+    for(int i = 0; i < pow(2, PALETTE_DEPTH); i++)
+    {
+        palette[3 * i] = i * 255 / (pow(2, PALETTE_DEPTH) - 1);
+        palette[3 * i + 1] = 0;
+        palette[3 * i + 2] = 0;
+    }
+    
+    ge_GIF *gif = ge_new_gif(
+        filename,
+        sidelength, sidelength,
+        palette,
+        PALETTE_DEPTH,
+        -1,
+        1
+    );
+
+    //Create gif stuff [temp]
+
+    Coord max = {.real = 3, .imag = 3};    
+    Coord mid = {.real = 0, .imag = 0};    
+
+    gif_render(gif, max, mid, sidelength);
+
+    // [\temp]
+
+    ge_close_gif(gif);
+    printf("%s created\n", filename);
 }
 
 
@@ -192,6 +254,8 @@ void pan(SDL_Renderer* p_renderer, Pixel init, Coord max, Coord* p_mid)
 
 int main()
 {
+
+
 
     //----------------------------------//
 
@@ -401,6 +465,9 @@ int main()
                 break;
 
             case 7: //save gif
+
+                save_gif("testing.gif", 480, NULL);
+
                 //add status bar
                 break;
         }
