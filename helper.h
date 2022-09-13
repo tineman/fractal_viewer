@@ -8,7 +8,7 @@
 #define HEIGHT 480
 
 #define FRAMERATE 12
-#define ITERATIONS 30
+#define ITERATIONS 128 //Must be a power of two
 
 #include <math.h>
 #include <stdlib.h>

@@ -16,9 +16,6 @@ App that allows the user to zoom in and pan around the mandelbrot set fractal.
 #include "helper.h"
 
 //----------------------------------//
-#ifdef _DEBUG_ITERATIONS
-int num_iterations = 0;
-#endif //_DEBUG_ITERATIONS
 
 //SDL components
 typedef struct Backend
@@ -94,11 +91,6 @@ int escape(Coord query)
     {
         if(query.real > 2 || query.imag > 2)
         {
-
-            #ifdef _DEBUG_ITERATIONS
-            num_iterations += i;
-            #endif //_DEBUG_ITERATIONS
-
             return i;
         }
         float temp = query.real;
@@ -106,10 +98,6 @@ int escape(Coord query)
         query.real = pow(query.real, 2) - pow(query.imag, 2) + init.real;
         query.imag = 2 * temp * query.imag + init.imag;
     }
-
-    #ifdef _DEBUG_ITERATIONS
-    num_iterations += ITERATIONS;
-    #endif //_DEBUG_ITERATIONS
 
     return 0;
 
@@ -150,11 +138,6 @@ void render(SDL_Renderer* p_renderer, Coord max, Coord mid)
     }
 
     SDL_RenderPresent(p_renderer);
-
-    #ifdef _DEBUG_ITERATIONS
-    printf("Rendering the image at %f + %fi at a magnitude of %fX i took %d for loops! If you still had to pay for computer time, you'd be one sad panda!\n", mid.real, mid.imag, max.real, num_iterations);
-    num_iterations = 0;
-    #endif //_DEBUG_ITERATIONS
 
 }
 
@@ -310,7 +293,7 @@ int main()
 
             case 3: //pan
             
-                printf("Entering panning mode\n");
+                printf("Entering panning mode. Press Q to exit.\n");
                 quit = 0;
                 while(!quit)
                 {
@@ -414,7 +397,7 @@ int main()
                 root = deletePanel(root, atoi(input));
 
                 printf("Panel deleted\n");
-                index--;
+                num_snapshots--;
                 break;
 
             case 7: //save gif
