@@ -7,7 +7,7 @@
 #define WIDTH 480
 #define HEIGHT 480
 
-#define FRAMERATE 12
+#define FRAMERATE 90
 #define PALETTE_DEPTH 7
 
 #include <math.h>

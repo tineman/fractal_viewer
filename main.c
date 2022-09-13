@@ -139,7 +139,7 @@ void render(SDL_Renderer* p_renderer, Coord max, Coord mid)
 }
 
 //Adds the frame at mid and max to the gif gif
-void gif_render(ge_GIF* gif, Coord max, Coord mid, int sidelength) //add duration
+void gif_render(ge_GIF* gif, Coord max, Coord mid, int sidelength, int mili_duration) //add duration!!!
 {
     //Each pixel is scale units apart (cartesian units/pixel)
     Coord scale;
@@ -163,15 +163,21 @@ void gif_render(ge_GIF* gif, Coord max, Coord mid, int sidelength) //add duratio
 
     }
 
-    ge_add_frame(gif, 10);
+    ge_add_frame(gif, mili_duration);
 
 }
 
 
 
-
+//Saves the gif with a custome sidelength and root
 void save_gif(char* filename, int sidelength, Panel_Node* root)
 {
+    if(root == NULL)
+    {
+        printf("No snapshots in the current gif. Returning to main menu\n");
+        return;
+    }
+
     uint8_t palette[(int) pow(2, PALETTE_DEPTH) * 3];
 
     for(int i = 0; i < pow(2, PALETTE_DEPTH); i++)
@@ -190,14 +196,53 @@ void save_gif(char* filename, int sidelength, Panel_Node* root)
         1
     );
 
-    //Create gif stuff [temp]
+    Panel_Node* next_panel = root->next;
 
-    Coord max = {.real = 3, .imag = 3};    
-    Coord mid = {.real = 0, .imag = 0};    
+    int snapshot_index = 0;
+    int mili_duration = 1;
 
-    gif_render(gif, max, mid, sidelength);
+    while(next_panel != NULL)
+    {
 
-    // [\temp]
+        Coord frame_max = {.real = root->max.real, .imag = root->max.imag};
+        Coord frame_mid = {.real = root->mid.real, .imag = root->mid.imag};
+
+        int numframes = FRAMERATE * root->duration;
+        Coord delta_mid = {.real = (next_panel->mid.real - root->mid.real) / numframes, .imag = (next_panel->mid.imag - root->mid.imag) / numframes};
+
+        //((next_panel->max.real - next_panel->mid.real) - (root->max.real - root->mid.real)) / numframes — the brackets represent the difference between the max and mid
+
+
+        Coord ddelta_max = {.real = ((next_panel->max.real - next_panel->mid.real) - (root->max.real - root->mid.real)) / numframes,
+                        .imag = ((next_panel->max.imag - next_panel->mid.imag) - (root->max.imag - root->mid.imag)) / numframes};
+
+
+        mili_duration = (int) ((1.0 / FRAMERATE) * 1000);
+
+
+        for(int i = 0; i <= FRAMERATE * root->duration; i++)
+        {
+            gif_render(gif, frame_max, frame_mid, sidelength, mili_duration);
+            printf("Snapshot %d, Frame %d/%d at (%Lf, %Lf) with max (%Lf, %Lf) and duration %d\n", snapshot_index + 1, i, FRAMERATE * root->duration, frame_mid.real, frame_mid.imag, frame_max.real, frame_max.imag, mili_duration);
+
+            frame_max.real += ddelta_max.real + delta_mid.real;
+            frame_max.imag += ddelta_max.imag + delta_mid.imag;
+
+            frame_mid.real += delta_mid.real;
+            frame_mid.imag += delta_mid.imag;
+
+        }
+
+        printf("Snapshot %d rendered\n", snapshot_index + 1);
+
+        snapshot_index++;
+
+        root = next_panel;
+        next_panel = root->next;
+
+    }
+    printf("Final frame at (%Lf, %Lf) with max (%Lf, %Lf) and duration %d\n", root->mid.real, root->mid.imag, root->max.real, root->max.imag, mili_duration);
+    gif_render(gif, root->max, root->mid, sidelength, mili_duration);
 
     ge_close_gif(gif);
     printf("%s created\n", filename);
@@ -466,7 +511,7 @@ int main()
 
             case 7: //save gif
 
-                save_gif("testing.gif", 480, NULL);
+                save_gif("testing.gif", 480, root);
 
                 //add status bar
                 break;
