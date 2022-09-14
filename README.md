@@ -2,13 +2,6 @@
 
 A side project that allows the user to view the Mandelbrot set fractal and save a gif of a path along it.
 
-<p align="center">
-
-![sample](https://user-images.githubusercontent.com/44347881/190032178-eef2f783-0950-451f-a71f-9a5f573bd986.gif)
-  
-</p>
-
-
 ![sample](https://user-images.githubusercontent.com/44347881/190032178-eef2f783-0950-451f-a71f-9a5f573bd986.gif)
 
 ### Acknowledgements
