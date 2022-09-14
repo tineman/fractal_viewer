@@ -1,6 +1,0 @@
-
-*.out
-testing.c
-testing.dSYM/Contents/Info.plist
-testing.dSYM/Contents/Resources/DWARF/testing
-.vscode/tasks.json
