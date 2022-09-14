@@ -1,10 +1,10 @@
 /*
 
-gcc -Wall -Wextra -I/Library/Frameworks/SDL.framework/Headers -framework SDL2 main.c
+App that allows the user explore the Mandlebrot fractal and save gifs.
 
-gcc -Wall -Wextra -D_DEBUG_SUBRENDER -I/Library/Frameworks/SDL.framework/Headers -framework SDL2 main.c
+Public Domain.
 
-App that allows the user to zoom in and pan around the mandelbrot set fractal.
+Tian Yu
 
 */
 
@@ -54,22 +54,27 @@ void del_backend(SDL_Window* p_window, SDL_Renderer* p_renderer)
     SDL_Quit();
 }
 
+//----------------------------------//
 
-
+// Print the options available
 void print_options()
 {
-    printf("OPTIONS\n"
+    printf("\n======= OPTIONS =======\n"
     "-1) Quit\n"
     "1) View current cordinates\n"
     "2) Go to coordinates\n"
     "3) Pan with mouse\n"
-    "GIF CREATION OPTIONS\n"
+    "\n======= GIF CREATION OPTIONS =======\n"
     "4) Check snapshot\n"
     "5) Add current frame as snapshot\n"
     "6) Delete snapshot\n"
-    "7) Save gif\n");
+    "7) Save gif\n"
+    "8) Display options\n");
 }
 
+//----------------------------------//
+
+//Functions for testing if a point is in the mandelbrot set
 
 /*
     RETURNS the number of iterations it takes for query to escape. Return 0 if query does not escape (arbitrary decision to make colouring easier)
@@ -138,22 +143,31 @@ void render(SDL_Renderer* p_renderer, Coord max, Coord mid)
 
 }
 
-//Adds the frame at mid and max to the gif gif
-void gif_render(ge_GIF* gif, Coord max, Coord mid, int sidelength, int mili_duration) //add duration!!!
+/*
+    ADD the frame specified to the gif
+    Warning: max.real:max.imag :: WIDTH:HEIGHT, otherwise the fractal will be stretched/compressed
+
+    \param gif The gif the frame is added to
+    \param max The largest coordinate on the screen
+    \param mid The coordinate at the centre of the screen
+    \param sidelength The sidelength of the gif
+    \param mili_duration The duration of the frame in miliseconds
+*/
+void gif_render(ge_GIF* gif, Coord max, Coord mid, int sidelength, int mili_duration)
 {
     //Each pixel is scale units apart (cartesian units/pixel)
     Coord scale;
-    scale.real = 2 * max.real / WIDTH;
-    scale.imag = 2 * max.imag / HEIGHT;
+    scale.real = 2 * max.real / sidelength;
+    scale.imag = 2 * max.imag / sidelength;
 
     //The cartesian point being rendered
     Coord point;
 
-    for(int pixel_x = 0; pixel_x < WIDTH; pixel_x++)
+    for(int pixel_x = 0; pixel_x < sidelength; pixel_x++)
     {
         point.real = pixel_x * scale.real - max.real + mid.real;
         
-        for(int pixel_y = 0; pixel_y < HEIGHT; pixel_y++)
+        for(int pixel_y = 0; pixel_y < sidelength; pixel_y++)
         {
             point.imag = pixel_y * scale.imag - max.imag + mid.imag;
 
@@ -169,8 +183,13 @@ void gif_render(ge_GIF* gif, Coord max, Coord mid, int sidelength, int mili_dura
 
 
 
-//Saves the gif with a custome sidelength and root
-void save_gif(char* filename, int sidelength, Panel_Node* root)
+/*
+    Renders the gif specified by the snapshots in root
+
+    \param filename The filename of the gif
+    \param sidelength The sidelength of the gif
+    \param root The linked list of snapshots to be rendered
+*/void save_gif(char* filename, int sidelength, Panel_Node* root)
 {
     if(root == NULL)
     {
@@ -193,7 +212,7 @@ void save_gif(char* filename, int sidelength, Panel_Node* root)
         palette,
         PALETTE_DEPTH,
         -1,
-        1
+        0
     );
 
     Panel_Node* next_panel = root->next;
@@ -208,11 +227,9 @@ void save_gif(char* filename, int sidelength, Panel_Node* root)
         Coord frame_mid = {.real = root->mid.real, .imag = root->mid.imag};
 
         int numframes = FRAMERATE * root->duration;
+
+        //Calculating the change in mid and max with every frame
         Coord delta_mid = {.real = (next_panel->mid.real - root->mid.real) / numframes, .imag = (next_panel->mid.imag - root->mid.imag) / numframes};
-
-        //((next_panel->max.real - next_panel->mid.real) - (root->max.real - root->mid.real)) / numframes — the brackets represent the difference between the max and mid
-
-
         Coord ddelta_max = {.real = ((next_panel->max.real - next_panel->mid.real) - (root->max.real - root->mid.real)) / numframes,
                         .imag = ((next_panel->max.imag - next_panel->mid.imag) - (root->max.imag - root->mid.imag)) / numframes};
 
@@ -223,7 +240,8 @@ void save_gif(char* filename, int sidelength, Panel_Node* root)
         for(int i = 0; i <= FRAMERATE * root->duration; i++)
         {
             gif_render(gif, frame_max, frame_mid, sidelength, mili_duration);
-            printf("Snapshot %d, Frame %d/%d at (%Lf, %Lf) with max (%Lf, %Lf) and duration %d\n", snapshot_index + 1, i, FRAMERATE * root->duration, frame_mid.real, frame_mid.imag, frame_max.real, frame_max.imag, mili_duration);
+            //Debugging
+            //printf("Snapshot %d, Frame %d/%d at (%Lf, %Lf) with max (%Lf, %Lf) and duration %d\n", snapshot_index + 1, i, FRAMERATE * root->duration, frame_mid.real, frame_mid.imag, frame_max.real, frame_max.imag, mili_duration);
 
             frame_max.real += ddelta_max.real + delta_mid.real;
             frame_max.imag += ddelta_max.imag + delta_mid.imag;
@@ -233,15 +251,12 @@ void save_gif(char* filename, int sidelength, Panel_Node* root)
 
         }
 
-        printf("Snapshot %d rendered\n", snapshot_index + 1);
-
         snapshot_index++;
 
         root = next_panel;
         next_panel = root->next;
 
     }
-    printf("Final frame at (%Lf, %Lf) with max (%Lf, %Lf) and duration %d\n", root->mid.real, root->mid.imag, root->max.real, root->max.imag, mili_duration);
     gif_render(gif, root->max, root->mid, sidelength, mili_duration);
 
     ge_close_gif(gif);
@@ -300,8 +315,6 @@ void pan(SDL_Renderer* p_renderer, Pixel init, Coord max, Coord* p_mid)
 int main()
 {
 
-
-
     //----------------------------------//
 
     //Variables for controlling the main loop
@@ -312,11 +325,13 @@ int main()
 
     //----------------------------------//
 
-    //Variables for saving a gif, index starting at 1 because input uses atoi
+    //Variables for saving a gif, index starting at 1
 
     Panel_Node* root = NULL;
     int num_snapshots = 0;
     int panel_index = 1;
+
+    char name[128];
 
     //----------------------------------//
 
@@ -351,6 +366,8 @@ int main()
            "|  __| |  _  /   / /\\ \\| |       | | / /\\ \\ | |     \\___ \\     | |\\/| |  _ < \n"
            "| |    | | \\ \\  / ____ \\ |____   | |/ ____ \\| |____ ____) | _ _| |  | | |_) |\n"
            "|_|    |_|  \\_\\/_/    \\_\\_____|  |_/_/    \\_\\______|_____(_|_|_)_|  |_|____/ \n");
+    printf("\n=======================================================================================\n\n");
+    printf("A lightweight Mandelbrot fractal viewer and gif saver.\n");
 
     print_options();
 
@@ -510,10 +527,29 @@ int main()
                 break;
 
             case 7: //save gif
+                printf("Please input a name for the gif\n");
+                scanf("%127s", name);
+                getchar();
 
-                save_gif("testing.gif", 480, root);
+                printf("Please input a side length for the gif. Recommended size of 480\n");
+                scanf("%127s", input);
+                getchar();
+
+                if(atoi(input) <= 0)
+                {
+                    printf("Invalid input, returning to main menu\n");
+                    break;
+                }
+
+                printf("Creating %s. This may take a while.\n", name);
+
+                save_gif(name, atoi(input), root);
 
                 //add status bar
+                break;
+
+            case 8: //print options
+                print_options();
                 break;
         }
 

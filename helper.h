@@ -2,12 +2,18 @@
 #define _HELPER
 
 //Structs and constants used everywhere
-//Also includes the functions used for setting up SDL and calculating the colour of each point
 
 #define WIDTH 480
 #define HEIGHT 480
 
+//Framerate is the number of frames per second. Recommended to be at least 60 to prevent
+//frames from "stuttering"
 #define FRAMERATE 90
+/*
+    The number of colours that show up on screen. The recommended is 5, 6, or 7.
+    In general, the more you want to zoom in, the higher it should be.
+    1 <= Palette_depth <= 7
+*/
 #define PALETTE_DEPTH 7
 
 #include <math.h>
@@ -30,6 +36,7 @@ typedef struct Coord
 
 // ------ Linked List -------- //
 
+//Index starts at one
 typedef struct panel_ll
 {
     Coord max;
